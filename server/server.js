@@ -16,6 +16,9 @@ const PORT = process.env.PORT || 5000;
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 
+// 👇 REMPLACE PAR LA VRAIE ADRESSE ICI AUSSI 👇
+const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
+
 app.use(cors());
 app.use(express.json());
 
@@ -149,8 +152,9 @@ app.post('/api/orders', async (req, res) => {
             html: `
                 <h1>Merci ${customer} !</h1>
                 <p>Votre commande de <strong>${total}€</strong> est bien réservée.</p>
-                <p><strong>Paiement :</strong> À régler sur place (Espèces ou Carte) lors du retrait.</p>
-                <p>Nous vous contacterons très vite pour convenir de l'heure de retrait.</p>
+                <p><strong>Paiement :</strong> À régler sur place (Espèces ou Carte) lors du retrait à la boutique :</p>
+                <p><strong>📍 Adresse :</strong> ${SHOP_ADDRESS}</p>
+                <p>Nous vous contacterons très vite pour convenir de l'heure.</p>
             `
         });
     } catch (e) { console.error("Erreur Mail Client:", e); }
@@ -186,9 +190,6 @@ app.post('/api/appointments', async (req, res) => {
     try {
         const { client, email, phone, device, issue, date, locationType, locationAddress } = req.body;
         
-        // On sauvegarde dans la base (On met l'info lieu dans la description ou un champ texte si pas de colonne dédiée)
-        // Pour faire simple et ne pas toucher la base, on concatène l'info dans "issue" ou on l'ignore en base mais on l'envoie par mail.
-        // Ici je l'enregistre tel quel, ça marchera si ton prisma schema est souple, sinon ça sera ignoré par prisma mais utilisé pour le mail.
         await prisma.appointment.create({ 
             data: { 
                 client, email, phone, device, 
@@ -197,7 +198,10 @@ app.post('/api/appointments', async (req, res) => {
             } 
         });
         
-        const locationText = locationType === 'atelier' ? "À l'Atelier" : `En Déplacement à : ${locationAddress}`;
+        // C'est ici qu'on définit l'adresse qui s'affichera dans le mail
+        const locationText = locationType === 'atelier' 
+            ? `À l'Atelier (${SHOP_ADDRESS})` 
+            : `En Déplacement à : ${locationAddress}`;
 
         // 1. MAIL CLIENT
         try {
