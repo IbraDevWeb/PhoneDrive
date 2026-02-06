@@ -11,7 +11,7 @@ function ProductDetails() {
   const { showToast } = useToast(); // <--- On récupère la fonction
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/products/${id}`)
+    fetch(`https://phonedrive-api.onrender.com/api/products/${id}`)
       .then(res => res.json())
       .then(data => {
         setProduct(data);

@@ -19,7 +19,7 @@ function Shop() {
   useEffect(() => {
     // Petit délai artificiel de 500ms pour voir l'effet skeleton (optionnel, mais sympa pour tester)
     // Dans la vraie vie, tu enlèverais le setTimeout
-    fetch('http://localhost:5000/api/products')
+    fetch('https://phonedrive-api.onrender.com/api/products')
       .then(res => res.json())
       .then(data => {
         setProducts(data);

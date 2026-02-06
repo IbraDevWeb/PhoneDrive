@@ -17,7 +17,7 @@ export function AuthProvider({ children }) {
     const token = localStorage.getItem('clientToken');
     if (token) {
         // On récupère le profil à jour depuis le serveur
-        fetch('http://localhost:5000/api/me', {
+        fetch('https://phonedrive-api.onrender.com/api/me', {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(res => {
@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
 
   // Fonction de Connexion
   const login = async (email, password) => {
-    const res = await fetch('http://localhost:5000/api/auth/login', {
+    const res = await fetch('https://phonedrive-api.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
 
   // Fonction d'Inscription
   const register = async (userData) => {
-    const res = await fetch('http://localhost:5000/api/auth/register', {
+    const res = await fetch('https://phonedrive-api.onrender.com/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)

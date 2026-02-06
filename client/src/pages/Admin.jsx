@@ -29,13 +29,13 @@ function Admin() {
 
     // C'EST ICI QUE J'AI AJOUTÉ LES HEADERS D'AUTORISATION 👇
     Promise.all([
-        fetch('http://localhost:5000/api/orders', {
+        fetch('https://phonedrive-api.onrender.com/api/orders', {
             headers: { 'Authorization': 'Bearer ' + token }
         }).then(res => res.json()),
 
-        fetch('http://localhost:5000/api/products').then(res => res.json()), // Les produits sont publics
+        fetch('https://phonedrive-api.onrender.com/api/products').then(res => res.json()), // Les produits sont publics
 
-        fetch('http://localhost:5000/api/appointments', {
+        fetch('https://phonedrive-api.onrender.com/api/appointments', {
             headers: { 'Authorization': 'Bearer ' + token }
         }).then(res => res.json())
     ]).then(([ordersData, productsData, appointmentsData]) => {
@@ -91,7 +91,7 @@ function Admin() {
   const handleDeleteProduct = async (id) => {
     if(!window.confirm("Es-tu sûr de vouloir supprimer cet iPhone ?")) return;
     
-    const response = await fetch(`http://localhost:5000/api/products/${id}`, { 
+    const response = await fetch(`https://phonedrive-api.onrender.com/api/products/${id}`, { 
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer ' + token }
     });
@@ -107,7 +107,7 @@ function Admin() {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     
-    const response = await fetch('http://localhost:5000/api/products', {
+    const response = await fetch('https://phonedrive-api.onrender.com/api/products', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
