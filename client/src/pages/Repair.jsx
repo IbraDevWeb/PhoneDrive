@@ -118,6 +118,17 @@ function Repair() {
             <div className="relative z-10">
                 <div className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4 shadow-lg shadow-blue-900/50">Atelier Certifié</div>
                 <h2 className="text-4xl font-bold mb-6 tracking-tight">Redonnez vie à votre iPhone.</h2>
+                
+                {/* --- ADRESSE AJOUTÉE ICI --- */}
+                <div className="mb-6 bg-white/10 p-4 rounded-xl border border-white/10 backdrop-blur-sm">
+                    <p className="text-xs text-slate-400 uppercase font-bold mb-1">Notre Adresse :</p>
+                    <p className="font-bold text-lg flex items-start gap-2">
+                        <i className="fa-solid fa-location-dot mt-1 text-blue-400"></i>
+                        {/* 👇 METS LA VRAIE ADRESSE ICI 👇 */}
+                        Square Anjou, 95100 Argenteuil
+                    </p>
+                </div>
+
                 <ul className="space-y-4 text-slate-300">
                     <li className="flex items-center gap-3"><i className="fa-solid fa-circle-check text-green-400"></i> Pièces Premium garanties</li>
                     <li className="flex items-center gap-3"><i className="fa-solid fa-clock text-blue-400"></i> Réparé en 30 minutes</li>
@@ -148,7 +159,7 @@ function Repair() {
             
             <form onSubmit={handleSubmit} className="space-y-6">
                 
-                {/* 1. CHOIX DU LIEU (NOUVEAU) */}
+                {/* 1. CHOIX DU LIEU */}
                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-3 ml-1">Lieu de réparation</label>
                     <div className="grid grid-cols-2 gap-4">
