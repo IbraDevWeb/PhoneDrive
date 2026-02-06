@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* On force l'application de la police partout */
+body {
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased; /* Rend le texte plus fin sur Mac */
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Animation d'apparition douce des pages */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Animation d'entrée de la Notification (Toast) */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Petite animation de rebond lent pour le panier vide */
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(-5%); }
+  50% { transform: translateY(5%); }
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite ease-in-out;
+}
