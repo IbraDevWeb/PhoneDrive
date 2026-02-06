@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 5000;
 
 // --- CONFIGURATION ---
 const resend = new Resend(process.env.RESEND_API_KEY);
-const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; // <--- REMPLACE PAR TON EMAIL ICI !
+const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 
 app.use(cors());
 app.use(express.json());
@@ -43,7 +43,6 @@ const authenticateUser = (req, res, next) => {
 };
 
 // --- AUTHENTIFICATION ---
-// Login Admin
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
     if (password === process.env.ADMIN_PASSWORD) {
@@ -54,7 +53,6 @@ app.post('/api/login', (req, res) => {
     }
 });
 
-// Inscription Client
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, name, phone, address } = req.body;
@@ -64,7 +62,6 @@ app.post('/api/auth/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         await prisma.user.create({ data: { email, password: hashedPassword, name, phone, address } });
 
-        // Email Bienvenue
         try {
             await resend.emails.send({
                 from: 'onboarding@resend.dev',
@@ -78,7 +75,6 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
 
-// Login Client
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -94,7 +90,6 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur connexion" }); }
 });
 
-// Profil Client (Me)
 app.get('/api/me', authenticateUser, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({ 
@@ -136,7 +131,6 @@ app.post('/api/orders', async (req, res) => {
   try {
     const { customer, email, address, total, items, userId } = req.body; 
     
-    // Création commande (Statut: Paiement au retrait)
     const orderData = { 
         customer, email, address, 
         total: parseFloat(total), 
@@ -187,18 +181,35 @@ app.get('/api/orders', authenticateAdmin, async (req, res) => {
     res.json(orders);
 });
 
-// --- RDV (AVEC ALERTES EMAIL) ---
+// --- RDV (AVEC LIEU ATELIER/DEPLACEMENT) ---
 app.post('/api/appointments', async (req, res) => {
     try {
-        const { client, email, phone, device, issue, date } = req.body;
-        await prisma.appointment.create({ data: { client, email, phone, device, issue, date: new Date(date) } });
+        const { client, email, phone, device, issue, date, locationType, locationAddress } = req.body;
         
+        // On sauvegarde dans la base (On met l'info lieu dans la description ou un champ texte si pas de colonne dédiée)
+        // Pour faire simple et ne pas toucher la base, on concatène l'info dans "issue" ou on l'ignore en base mais on l'envoie par mail.
+        // Ici je l'enregistre tel quel, ça marchera si ton prisma schema est souple, sinon ça sera ignoré par prisma mais utilisé pour le mail.
+        await prisma.appointment.create({ 
+            data: { 
+                client, email, phone, device, 
+                issue: `${issue} (${locationType === 'atelier' ? 'Atelier' : 'Déplacement'})`, 
+                date: new Date(date) 
+            } 
+        });
+        
+        const locationText = locationType === 'atelier' ? "À l'Atelier" : `En Déplacement à : ${locationAddress}`;
+
         // 1. MAIL CLIENT
         try {
             await resend.emails.send({
                 from: 'onboarding@resend.dev', to: email,
                 subject: 'Rendez-vous confirmé 🛠️',
-                html: `<p>Bonjour ${client}, votre RDV pour réparer votre <strong>${device}</strong> est confirmé pour le ${new Date(date).toLocaleString()}.</p>`
+                html: `
+                    <p>Bonjour ${client},</p>
+                    <p>Votre RDV pour réparer votre <strong>${device}</strong> est confirmé.</p>
+                    <p><strong>Date :</strong> ${new Date(date).toLocaleString()}</p>
+                    <p><strong>Lieu :</strong> ${locationText}</p>
+                `
             });
         } catch(e) {}
 
@@ -208,16 +219,22 @@ app.post('/api/appointments', async (req, res) => {
                 from: 'onboarding@resend.dev', to: ADMIN_EMAIL,
                 subject: `🔧 NOUVEAU RDV : ${device}`,
                 html: `
-                    <h2>Nouveau RDV Atelier</h2>
-                    <p><strong>Client :</strong> ${client} (${phone})</p>
-                    <p><strong>Appareil :</strong> ${device} (${issue})</p>
-                    <p><strong>Date :</strong> ${new Date(date).toLocaleString()}</p>
+                    <h2>Nouveau RDV Réparation</h2>
+                    <ul>
+                        <li><strong>Client :</strong> ${client} (${phone})</li>
+                        <li><strong>Appareil :</strong> ${device} (${issue})</li>
+                        <li><strong>Date :</strong> ${new Date(date).toLocaleString()}</li>
+                        <li><strong>LIEU :</strong> ${locationText}</li>
+                    </ul>
                 `
             });
         } catch(e) {}
         
         res.json({ message: "RDV pris" });
-    } catch (e) { res.status(500).json({ error: "Erreur RDV" }); }
+    } catch (e) { 
+        console.error(e);
+        res.status(500).json({ error: "Erreur RDV" }); 
+    }
 });
 
 app.get('/api/appointments', authenticateAdmin, async (req, res) => {

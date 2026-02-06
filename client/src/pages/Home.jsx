@@ -84,7 +84,40 @@ function Home() {
         </div>
     </div>
 
-      {/* --- SECTION "POURQUOI NOUS ?" (Design Grille) --- */}
+      {/* --- 1. SECTION "L'ATELIER" (Mise en avant réparation - Remontée ici) --- */}
+      <div className="bg-slate-900 text-white py-24 relative overflow-hidden">
+         {/* Cercle décoratif en fond */}
+         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10">
+            <div className="md:w-1/2">
+                <img 
+                    src="https://images.unsplash.com/photo-1581092921461-e398d1f4312c?q=80&w=2070&auto=format&fit=crop" 
+                    alt="Atelier de réparation" 
+                    className="rounded-3xl shadow-2xl border border-slate-700"
+                />
+            </div>
+            <div className="md:w-1/2 space-y-6">
+                <div className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Service Atelier</div>
+                <h2 className="text-4xl md:text-5xl font-bold leading-tight">Votre iPhone est cassé ?<br/>On s'en occupe.</h2>
+                <p className="text-slate-300 text-lg">
+                    Un écran brisé ou une batterie fatiguée ne devrait pas signifier la fin de votre appareil.
+                    Choisissez : passez à l'atelier ou demandez une intervention à domicile/bureau.
+                </p>
+                <ul className="space-y-3">
+                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Réparation en Atelier ou en Déplacement</li>
+                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Garantie 6 mois sur les réparations</li>
+                </ul>
+                <div className="pt-4">
+                    <Link to="/reparation" className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition inline-flex items-center gap-2">
+                        Prendre rendez-vous <i className="fa-solid fa-calendar-check"></i>
+                    </Link>
+                </div>
+            </div>
+         </div>
+      </div>
+
+      {/* --- 2. SECTION "POURQUOI NOUS ?" (Design Grille) --- */}
       <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">L'expérience Apple, sans le stress.</h2>
@@ -125,39 +158,6 @@ function Home() {
                 </p>
             </div>
         </div>
-      </div>
-
-      {/* --- SECTION "L'ATELIER" (Mise en avant réparation) --- */}
-      <div className="bg-slate-900 text-white py-24 relative overflow-hidden">
-         {/* Cercle décoratif en fond */}
-         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-
-         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10">
-            <div className="md:w-1/2">
-                <img 
-                    src="https://images.unsplash.com/photo-1581092921461-e398d1f4312c?q=80&w=2070&auto=format&fit=crop" 
-                    alt="Atelier de réparation" 
-                    className="rounded-3xl shadow-2xl border border-slate-700"
-                />
-            </div>
-            <div className="md:w-1/2 space-y-6">
-                <div className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Service Atelier</div>
-                <h2 className="text-4xl md:text-5xl font-bold leading-tight">Votre iPhone est cassé ?<br/>Pas de panique.</h2>
-                <p className="text-slate-300 text-lg">
-                    Un écran brisé ou une batterie fatiguée ne devrait pas signifier la fin de votre appareil.
-                    Prenez rendez-vous en ligne, passez à l'atelier, et repartez avec un iPhone comme neuf en 30 minutes.
-                </p>
-                <ul className="space-y-3">
-                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Pièces d'origine ou compatibles Premium</li>
-                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Garantie 6 mois sur les réparations</li>
-                </ul>
-                <div className="pt-4">
-                    <Link to="/reparation" className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition inline-flex items-center gap-2">
-                        Prendre rendez-vous <i className="fa-solid fa-calendar-check"></i>
-                    </Link>
-                </div>
-            </div>
-         </div>
       </div>
 
     </div>
