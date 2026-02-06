@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 
-// 👇 REMPLACE PAR LA VRAIE ADRESSE ICI AUSSI 👇
+// 👇 ADRESSE DE LA BOUTIQUE
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
 app.use(cors());
@@ -28,6 +28,8 @@ const authenticateAdmin = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
   if (!token) return res.status(401).json({ error: "Token manquant." });
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    // On accepte si le token dit 'admin' OU si l'email dans le token correspond à l'admin
+    // (Mais ici on se base sur le rôle encodé dans le token)
     if (err || decoded.role !== 'admin') return res.status(403).json({ error: "Accès Admin requis." });
     req.user = decoded;
     next();
@@ -46,6 +48,8 @@ const authenticateUser = (req, res, next) => {
 };
 
 // --- AUTHENTIFICATION ---
+
+// Login Admin Classique (Via mot de passe unique)
 app.post('/api/login', (req, res) => {
     const { password } = req.body;
     if (password === process.env.ADMIN_PASSWORD) {
@@ -56,6 +60,7 @@ app.post('/api/login', (req, res) => {
     }
 });
 
+// Inscription Client
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, name, phone, address } = req.body;
@@ -78,6 +83,7 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
 
+// Login Client (AVEC PASSE-DROIT ADMIN)
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -87,10 +93,23 @@ app.post('/api/auth/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(401).json({ error: "Mot de passe faux." });
         
-        const token = jwt.sign({ id: user.id, role: 'client' }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        // --- 👑 LE PASSE-DROIT ADMIN ---
+        // Si c'est TON email, on force le rôle 'admin'. Sinon 'client'.
+        let userRole = 'client';
+        if (user.email === "nishimiya.ichida@gmail.com") {
+            userRole = 'admin';
+        }
+        // -------------------------------
+        
+        const token = jwt.sign({ id: user.id, role: userRole }, process.env.JWT_SECRET, { expiresIn: '7d' });
         const { password: _, ...userData } = user;
-        res.json({ token, user: userData });
-    } catch (error) { res.status(500).json({ error: "Erreur connexion" }); }
+        
+        // On renvoie le rôle modifié au frontend
+        res.json({ token, user: { ...userData, role: userRole } });
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ error: "Erreur connexion" }); 
+    }
 });
 
 app.get('/api/me', authenticateUser, async (req, res) => {
