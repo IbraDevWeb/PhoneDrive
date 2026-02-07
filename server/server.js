@@ -19,7 +19,12 @@ const ADMIN_EMAIL = "nishimiya.ichida@gmail.com";
 // 👇 ADRESSE DE LA BOUTIQUE
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
-app.use(cors());
+// Remplace "app.use(cors());" par tout ça :
+app.use(cors({
+  origin: '*', // Autorise tout le monde (Vercel, ton ordi, etc.)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Autorise toutes les actions
+  allowedHeaders: ['Content-Type', 'Authorization'] // Autorise l'envoi du Token (le badge)
+}));
 app.use(express.json());
 
 // --- MIDDLEWARES ---
