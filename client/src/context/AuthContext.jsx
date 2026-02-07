@@ -8,76 +8,109 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // Infos du client (nom, email...)
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
 
-  // Au chargement, on vérifie si le client est déjà connecté (Token dans le stockage)
+  // URL du Backend (stockée ici pour éviter les erreurs)
+  const API_URL = 'https://phonedrive-api.onrender.com/api';
+
   useEffect(() => {
-    const token = localStorage.getItem('clientToken');
-    if (token) {
-        // On récupère le profil à jour depuis le serveur
-        fetch('https://phonedrive-api.onrender.com/api/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-        .then(res => {
-            if (res.ok) return res.json();
-            throw new Error("Session expirée");
-        })
-        .then(userData => setUser(userData))
-        .catch(() => {
-            localStorage.removeItem('clientToken'); // Si token invalide, on nettoie
-            setUser(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-        setLoading(false);
-    }
+    checkUserLoggedIn();
   }, []);
 
-  // Fonction de Connexion
+  const checkUserLoggedIn = async () => {
+    const token = localStorage.getItem('clientToken');
+    if (token) {
+      try {
+        const res = await fetch(`${API_URL}/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            const userData = await res.json();
+            
+            // --- 🛡️ SÉCURITÉ ANTI-CACHE ---
+            // On force le rôle admin sur le Frontend si c'est toi
+            if (userData.email === "nishimiya.ichida@gmail.com") {
+                userData.role = 'admin';
+            }
+            // -----------------------------
+
+            setUser(userData);
+        } else {
+            // Si le token est invalide (ex: expiré), on nettoie
+            localStorage.removeItem('clientToken');
+            setUser(null);
+        }
+      } catch (error) {
+        console.error("Erreur auth:", error);
+        localStorage.removeItem('clientToken');
+        setUser(null);
+      }
+    }
+    // Quoi qu'il arrive, on dit que le chargement est FINI
+    setLoading(false);
+  };
+
   const login = async (email, password) => {
-    const res = await fetch('https://phonedrive-api.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-    });
-    const data = await res.json();
-    
-    if (res.ok) {
-        localStorage.setItem('clientToken', data.token); // On stocke le badge
-        setUser(data.user);
-        showToast(`Ravi de vous revoir, ${data.user.name} ! 👋`);
-        return true;
-    } else {
-        showToast(data.error || "Erreur de connexion", "error");
+    try {
+        const res = await fetch(`${API_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            localStorage.setItem('clientToken', data.token);
+            
+            // Force Admin immédiat à la connexion
+            if (data.user.email === "nishimiya.ichida@gmail.com") {
+                data.user.role = 'admin';
+            }
+
+            setUser(data.user);
+            showToast(`Ravi de vous revoir, ${data.user.name || 'Admin'} ! 👋`);
+            return true;
+        } else {
+            showToast(data.error || "Erreur de connexion", "error");
+            return false;
+        }
+    } catch (error) {
+        showToast("Erreur serveur", "error");
         return false;
     }
   };
 
-  // Fonction d'Inscription
   const register = async (userData) => {
-    const res = await fetch('https://phonedrive-api.onrender.com/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-    });
-    const data = await res.json();
+    try {
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+        const data = await res.json();
 
-    if (res.ok) {
-        showToast("Compte créé ! Connectez-vous maintenant. 🎉");
-        return true;
-    } else {
-        showToast(data.error || "Erreur inscription", "error");
+        if (res.ok) {
+            showToast("Compte créé ! Connectez-vous maintenant. 🎉");
+            return true;
+        } else {
+            showToast(data.error || "Erreur inscription", "error");
+            return false;
+        }
+    } catch (error) {
+        showToast("Erreur serveur", "error");
         return false;
     }
   };
 
-  // Fonction de Déconnexion
   const logout = () => {
     localStorage.removeItem('clientToken');
     setUser(null);
     showToast("À bientôt ! 👋");
+    // Redirection forcée vers l'accueil
+    window.location.href = '/';
   };
 
   return (

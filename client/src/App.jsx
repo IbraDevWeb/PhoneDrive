@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext'; // On importe le hook d'authentification
+import { useAuth } from './context/AuthContext'; 
 
 // Les Contextes
 import { CartProvider } from './context/CartContext';
@@ -19,7 +19,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Success from './pages/Success';
 import Admin from './pages/Admin';
-import Login from './pages/Login'; // Login Admin
+import Login from './pages/Login'; 
 import Legal from './pages/Legal';
 
 // Nouvelles Pages Client
@@ -27,17 +27,28 @@ import ClientLogin from './pages/ClientLogin';
 import ClientRegister from './pages/ClientRegister';
 import ClientAccount from './pages/ClientAccount';
 
-// --- 🛡️ LE VIGILE (Composant de Protection) ---
+// --- 🛡️ LE VIGILE CORRIGÉ (AdminRoute) ---
 const AdminRoute = ({ children }) => {
-  const { user } = useAuth(); // On récupère l'utilisateur connecté
+  const { user, loading } = useAuth(); 
   
-  // Si pas connecté OU si le rôle n'est pas 'admin'
+  // 1. SI ÇA CHARGE ENCORE : On affiche un écran d'attente
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+           <i className="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600"></i>
+           <p className="text-slate-500 font-medium">Vérification des accès...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. SI CHARGEMENT FINI + PAS D'ACCÈS : Dehors
   if (!user || user.role !== 'admin') {
-    // Hop, on le renvoie à l'accueil incognito
     return <Navigate to="/" replace />;
   }
 
-  // Sinon, c'est le chef, on laisse passer
+  // 3. SINON : Bienvenue Chef
   return children;
 };
 
@@ -68,7 +79,7 @@ function App() {
                   <Route path="/inscription" element={<ClientRegister />} />
                   <Route path="/mon-compte" element={<ClientAccount />} />
 
-                  {/* Route Login Admin (Accessible pour se connecter) */}
+                  {/* Route Login Admin */}
                   <Route path="/login" element={<Login />} />
 
                   {/* 👇 ROUTE ADMIN PROTÉGÉE 👇 */}
