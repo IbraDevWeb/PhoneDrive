@@ -13,7 +13,7 @@ function Footer() {
               <div className="bg-blue-600 text-white w-8 h-8 flex items-center justify-center rounded-lg">
                 <span className="font-bold text-sm">P</span>
               </div>
-              PhoneDrive
+              MKRR STORE
             </Link>
             <p className="text-slate-400 text-sm leading-relaxed">
               Le spécialiste du reconditionné premium. <br/>
@@ -62,7 +62,7 @@ function Footer() {
 
         {/* Barre du bas */}
         <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-slate-500">
-            <p>© 2026 PhoneDrive. Tous droits réservés.</p>
+            <p>© 2026 MKRR STORE. Tous droits réservés.</p>
             <div className="flex gap-6 mt-4 md:mt-0">
                 {/* Remplace les spans statiques par ça : */}
 <div className="flex gap-6 mt-4 md:mt-0">
