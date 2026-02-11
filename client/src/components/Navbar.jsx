@@ -14,7 +14,7 @@ function Navbar() {
           {/* LOGO */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110 duration-300">
-              P
+              M
             </div>
             <span className="text-2xl font-bold text-slate-900 tracking-tight">MKRR STORE</span>
           </Link>
