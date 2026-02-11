@@ -4,32 +4,32 @@ import { useState, useEffect } from 'react';
 function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // --- NOUVELLES IMAGES & TEXTES ---
+  // --- NOUVELLES IMAGES & TEXTES (100% APPLE) ---
   const slides = [
     {
-      // Image sombre, très "Pro", mise en valeur des objectifs
-      image: "https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=2070&auto=format&fit=crop",
+      // Image 1 : iPhone 15 Pro Titanium (Vrai modèle Apple)
+      image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2070&auto=format&fit=crop",
       title: "L'iPhone Pro. À prix pas pro.",
       subtitle: "Pourquoi payer 1300€ ? Accédez à la puissance ultime d'Apple, reconditionnée à neuf, pour une fraction du prix.",
       cta: "Découvrir les Pro"
     },
     {
-      // Image épurée, blanche/grise, très clean
-      image: "https://images.unsplash.com/photo-1592814053501-5747775ddc27?q=80&w=2070&auto=format&fit=crop",
+      // Image 2 : iPhone Blanc Clean (Ambiance pure/neuve)
+      image: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=2070&auto=format&fit=crop",
       title: "Reconditionné. Pas abîmé.",
       subtitle: "Aucune rayure, batterie neuve ou >85%. Nos standards sont aussi élevés que ceux d'Apple.",
       cta: "Voir le stock"
     },
     {
-      // Image "Lifestyle" (quelqu'un qui tient le téléphone), rassurante
-      image: "https://images.unsplash.com/photo-1556656793-02715d8dd660?q=80&w=2070&auto=format&fit=crop",
+      // Image 3 : Lifestyle (iPhone en main dans la rue)
+      image: "https://images.unsplash.com/photo-1516724562728-afc824a36e84?q=80&w=2070&auto=format&fit=crop",
       title: "Une seconde vie. Une première classe.",
       subtitle: "Faites un geste pour la planète sans compromis sur la qualité. Garantie 12 mois incluse.",
       cta: "Acheter responsable"
     }
   ];
 
-  // Changement automatique des slides (6 secondes cette fois, pour laisser le temps de lire)
+  // Changement automatique des slides (6 secondes)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
@@ -72,7 +72,7 @@ function Home() {
             </div>
         ))}
         
-        {/* Indicateurs (Barres au lieu de points) */}
+        {/* Indicateurs */}
         <div className="absolute bottom-12 left-0 right-0 z-30 flex justify-center gap-4">
             {slides.map((_, index) => (
                 <button 
@@ -84,17 +84,18 @@ function Home() {
         </div>
     </div>
 
-      {/* --- 1. SECTION "L'ATELIER" (Mise en avant réparation - Remontée ici) --- */}
+      {/* --- 1. SECTION "L'ATELIER" (Réparation) --- */}
       <div className="bg-slate-900 text-white py-24 relative overflow-hidden">
          {/* Cercle décoratif en fond */}
          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10">
             <div className="md:w-1/2">
+                {/* Image de réparation (Technicien avec outils) */}
                 <img 
-                    src="https://images.unsplash.com/photo-1581092921461-e398d1f4312c?q=80&w=2070&auto=format&fit=crop" 
+                    src="https://images.unsplash.com/photo-1597424214309-8aa2950d4d29?q=80&w=2070&auto=format&fit=crop" 
                     alt="Atelier de réparation" 
-                    className="rounded-3xl shadow-2xl border border-slate-700"
+                    className="rounded-3xl shadow-2xl border border-slate-700 hover:scale-105 transition duration-500"
                 />
             </div>
             <div className="md:w-1/2 space-y-6">
@@ -117,7 +118,7 @@ function Home() {
          </div>
       </div>
 
-      {/* --- 2. SECTION "POURQUOI NOUS ?" (Design Grille) --- */}
+      {/* --- 2. SECTION "POURQUOI NOUS ?" --- */}
       <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">L'expérience Apple, sans le stress.</h2>
@@ -125,7 +126,6 @@ function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Carte 1 */}
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-blue-100">
                 <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
                     <i className="fa-solid fa-magnifying-glass-chart"></i>
@@ -136,7 +136,6 @@ function Home() {
                 </p>
             </div>
 
-            {/* Carte 2 */}
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-green-100">
                 <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-green-200 group-hover:scale-110 transition-transform">
                     <i className="fa-solid fa-battery-full"></i>
@@ -147,7 +146,6 @@ function Home() {
                 </p>
             </div>
 
-            {/* Carte 3 */}
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-purple-100">
                 <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform">
                     <i className="fa-solid fa-headset"></i>
