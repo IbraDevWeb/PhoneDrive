@@ -93,10 +93,11 @@ function Home() {
             <div className="md:w-1/2">
                 {/* Image de réparation (Technicien avec outils) */}
                 <img 
-                    src="https://images.unsplash.com/photo-1597424214309-8aa2950d4d29?q=80&w=2070&auto=format&fit=crop" 
-                    alt="Atelier de réparation" 
-                    className="rounded-3xl shadow-2xl border border-slate-700 hover:scale-105 transition duration-500"
-                />
+    src="https://images.unsplash.com/photo-1588508065123-287b28e013da?q=80&w=2070&auto=format&fit=crop" 
+    alt="Atelier de réparation" 
+    className="rounded-3xl shadow-2xl border border-slate-700 hover:scale-105 transition duration-500 w-full object-cover h-[400px]" 
+    onError={(e) => {e.target.src = 'https://placehold.co/600x400/1e293b/FFF?text=Atelier+PhoneDrive'}}
+/>
             </div>
             <div className="md:w-1/2 space-y-6">
                 <div className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Service Atelier</div>
