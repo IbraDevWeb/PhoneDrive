@@ -52,10 +52,10 @@ function Home() {
                 ${index === currentSlide ? 'opacity-100 scale-100 z-20' : 'opacity-0 scale-105 z-0 pointer-events-none'}`}
             >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 z-10"></div>
-                <img src={slide.image} className="w-full h-full object-cover" alt="Bannière PhoneDrive" />
+                <img src={slide.image} className="w-full h-full object-cover" alt="Bannière MKRR STORE" />
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-4 pb-12">
                     <span className="inline-block py-1 px-3 rounded-full bg-blue-600/90 backdrop-blur-md border border-blue-400/30 text-white text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in shadow-lg shadow-blue-900/50">
-                        {index === 0 ? 'Service Atelier Express' : 'PhoneDrive Premium'}
+                        {index === 0 ? 'Service Atelier Express' : 'MKRR STORE Premium'}
                     </span>
                     <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in drop-shadow-2xl tracking-tight leading-tight max-w-4xl">
                         {slide.title}
