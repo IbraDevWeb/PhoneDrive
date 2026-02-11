@@ -4,10 +4,9 @@ import { useState, useEffect } from 'react';
 function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // --- CONFIGURATION DES SLIDES (Réparation en PREMIER) ---
+  // --- 1. CONFIGURATION DES SLIDES ---
   const slides = [
     {
-      // SLIDE 1 : RÉPARATION (Cœur de métier)
       image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070&auto=format&fit=crop",
       title: "Votre iPhone est cassé ?",
       subtitle: "Pas de panique. Écran, batterie, micro... Nous réparons tout en 30 minutes. Atelier à Paris ou à domicile.",
@@ -16,7 +15,6 @@ function Home() {
       icon: <i className="fa-solid fa-screwdriver-wrench"></i>
     },
     {
-      // SLIDE 2 : VENTE (PRO)
       image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2070&auto=format&fit=crop",
       title: "L'iPhone Pro. À prix pas pro.",
       subtitle: "Pourquoi payer 1300€ ? Accédez à la puissance ultime d'Apple, reconditionnée à neuf.",
@@ -25,10 +23,9 @@ function Home() {
       icon: <i className="fa-brands fa-apple"></i>
     },
     {
-      // SLIDE 3 : ÉCOLOGIE
       image: "https://images.unsplash.com/photo-1556656793-02715d8dd660?q=80&w=2070&auto=format&fit=crop",
       title: "Une seconde vie. Une première classe.",
-      subtitle: "Faites un geste pour la planète sans compromis sur la qualité. Garantie 12 mois incluse.",
+      subtitle: "Faites un geste pour la planète sans compromis sur la qualité. iPhones testés et vérifiés.",
       cta: "Acheter responsable",
       link: "/boutique",
       icon: <i className="fa-solid fa-leaf"></i>
@@ -46,22 +43,16 @@ function Home() {
   return (
     <div className="bg-white">
       
-      {/* --- 1. HERO SECTION (Carousel) --- */}
+      {/* --- HERO SECTION (Carousel) --- */}
       <div className="relative h-[90vh] overflow-hidden bg-slate-900">
-        
         {slides.map((slide, index) => (
             <div 
                 key={index}
-                // FIX CLIC : z-20 si actif, pointer-events-none si inactif
                 className={`absolute inset-0 transition-all duration-1000 ease-in-out transform 
                 ${index === currentSlide ? 'opacity-100 scale-100 z-20' : 'opacity-0 scale-105 z-0 pointer-events-none'}`}
             >
-                {/* Filtre sombre */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 z-10"></div>
-                
                 <img src={slide.image} className="w-full h-full object-cover" alt="Bannière PhoneDrive" />
-                
-                {/* Contenu Texte */}
                 <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-4 pb-12">
                     <span className="inline-block py-1 px-3 rounded-full bg-blue-600/90 backdrop-blur-md border border-blue-400/30 text-white text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in shadow-lg shadow-blue-900/50">
                         {index === 0 ? 'Service Atelier Express' : 'PhoneDrive Premium'}
@@ -83,8 +74,6 @@ function Home() {
                 </div>
             </div>
         ))}
-        
-        {/* Indicateurs */}
         <div className="absolute bottom-12 left-0 right-0 z-40 flex justify-center gap-4">
             {slides.map((_, index) => (
                 <button 
@@ -96,14 +85,12 @@ function Home() {
         </div>
     </div>
 
-      {/* --- 2. SECTION "L'ATELIER" (Le retour !) --- */}
+      {/* --- SECTION "L'ATELIER" --- */}
       <div className="bg-slate-900 text-white py-24 relative overflow-hidden">
-         {/* Cercle décoratif en fond */}
          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
 
          <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10">
             <div className="md:w-1/2">
-                {/* Image Atelier avec fallback de sécurité */}
                 <img 
                     src="https://images.unsplash.com/photo-1597424214309-8aa2950d4d29?q=80&w=2070&auto=format&fit=crop" 
                     alt="Atelier de réparation" 
@@ -143,7 +130,7 @@ function Home() {
          </div>
       </div>
 
-      {/* --- 3. SECTION "POURQUOI NOUS ?" --- */}
+      {/* --- SECTION "POURQUOI NOUS ?" (Modifiée) --- */}
       <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-slate-900 mb-4">L'Expertise Apple à Paris.</h2>
@@ -151,26 +138,30 @@ function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            
+            {/* 1. NOUVEAU : Réparation Express */}
             <div className="group bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-200 hover:border-blue-200">
                 <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <i className="fa-solid fa-microscope"></i>
+                    <i className="fa-solid fa-stopwatch"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Diagnostic Précis</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Réparation Express</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                    Avant toute intervention, nous effectuons un diagnostic complet gratuit. Pas de surprise sur la facture.
+                    Votre temps est précieux. Écrans et batteries sont remplacés en moins de 30 minutes, sous vos yeux.
                 </p>
             </div>
 
+            {/* 2. NOUVEAU : Prix Transparents */}
             <div className="group bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-200 hover:border-green-200">
                 <div className="w-14 h-14 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <i className="fa-solid fa-shield-halved"></i>
+                    <i className="fa-solid fa-hand-holding-dollar"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Garantie Incluse</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Prix Transparents</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                    Toutes nos réparations et nos téléphones sont garantis. Un problème ? On remplace ou on répare, sans discuter.
+                    Fini les mauvaises surprises. Nos tarifs sont clairs, affichés et compétitifs pour une prestation haut de gamme.
                 </p>
             </div>
 
+            {/* 3. EXISTANT : Qualité d'Origine */}
             <div className="group bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-200 hover:border-purple-200">
                 <div className="w-14 h-14 bg-purple-100 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform">
                     <i className="fa-solid fa-star"></i>
@@ -183,7 +174,7 @@ function Home() {
         </div>
       </div>
 
-      {/* --- 4. BANNIÈRE FINALE (Bonus) --- */}
+      {/* --- BANNIÈRE FINALE --- */}
       <div className="bg-gradient-to-r from-blue-700 to-indigo-800 py-16 px-6 text-center text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         <div className="relative z-10 max-w-3xl mx-auto">
