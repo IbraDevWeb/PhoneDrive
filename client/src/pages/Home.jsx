@@ -4,32 +4,35 @@ import { useState, useEffect } from 'react';
 function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // --- NOUVELLES IMAGES & TEXTES (100% APPLE) ---
+  // --- CONFIGURATION DES SLIDES (Réparation en PREMIER) ---
   const slides = [
     {
-      // Image 1 : iPhone 15 Pro Titanium (Vrai modèle Apple)
+      // SLIDE 1 : COEUR DE MÉTIER -> RÉPARATION
+      image: "https://images.unsplash.com/photo-1597424214309-8aa2950d4d29?q=80&w=2070&auto=format&fit=crop",
+      title: "Votre iPhone est cassé ?",
+      subtitle: "Pas de panique. Écran, batterie, micro... Nous réparons tout en 30 minutes. Atelier à Paris ou à domicile.",
+      cta: "Prendre Rendez-vous",
+      link: "/reparation" // Celui-ci va vers la réparation
+    },
+    {
+      // SLIDE 2 : VENTE (PRO)
       image: "https://images.unsplash.com/photo-1695048133142-1a20484d2569?q=80&w=2070&auto=format&fit=crop",
       title: "L'iPhone Pro. À prix pas pro.",
-      subtitle: "Pourquoi payer 1300€ ? Accédez à la puissance ultime d'Apple, reconditionnée à neuf, pour une fraction du prix.",
-      cta: "Découvrir les Pro"
+      subtitle: "Pourquoi payer 1300€ ? Accédez à la puissance ultime d'Apple, reconditionnée à neuf.",
+      cta: "Voir les iPhone",
+      link: "/boutique" // Celui-ci va vers la boutique
     },
     {
-      // Image 2 : iPhone Blanc Clean (Ambiance pure/neuve)
-      image: "https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=2070&auto=format&fit=crop",
-      title: "Reconditionné. Pas abîmé.",
-      subtitle: "Aucune rayure, batterie neuve ou >85%. Nos standards sont aussi élevés que ceux d'Apple.",
-      cta: "Voir le stock"
-    },
-    {
-      // Image 3 : Lifestyle (iPhone en main dans la rue)
-      image: "https://images.unsplash.com/photo-1516724562728-afc824a36e84?q=80&w=2070&auto=format&fit=crop",
+      // SLIDE 3 : LIFESTYLE / ÉCOLO
+      image: "https://images.unsplash.com/photo-1556656793-02715d8dd660?q=80&w=2070&auto=format&fit=crop",
       title: "Une seconde vie. Une première classe.",
       subtitle: "Faites un geste pour la planète sans compromis sur la qualité. Garantie 12 mois incluse.",
-      cta: "Acheter responsable"
+      cta: "Acheter responsable",
+      link: "/boutique"
     }
   ];
 
-  // Changement automatique des slides (6 secondes)
+  // Changement automatique (6 sec)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
@@ -40,120 +43,93 @@ function Home() {
   return (
     <div className="bg-white">
       
-      {/* --- HERO SECTION (Carousel Plein Écran) --- */}
+      {/* --- HERO SECTION (Carousel) --- */}
       <div className="relative h-[90vh] overflow-hidden bg-slate-900">
         
         {slides.map((slide, index) => (
             <div 
                 key={index}
-                className={`absolute inset-0 transition-all duration-1000 ease-in-out transform ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+                // J'ai ajouté 'z-20' pour le slide actif et 'pointer-events-none' pour les inactifs
+                // C'est ça qui rend le bouton CLIQUABLE !
+                className={`absolute inset-0 transition-all duration-1000 ease-in-out transform 
+                ${index === currentSlide ? 'opacity-100 scale-100 z-20' : 'opacity-0 scale-105 z-0 pointer-events-none'}`}
             >
-                {/* Image de fond + Filtre sombre pour lire le texte */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 z-10"></div>
-                <img src={slide.image} className="w-full h-full object-cover" alt="Bannière iPhone" />
+                {/* Filtre sombre pour lire le texte */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/30 z-10"></div>
+                
+                <img src={slide.image} className="w-full h-full object-cover" alt="Bannière" />
                 
                 {/* Contenu Texte */}
-                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 pb-12">
-                    <span className="inline-block py-1 px-3 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in">
-                        PhoneDrive Premium
+                <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-center px-4 pb-12">
+                    <span className="inline-block py-1 px-3 rounded-full bg-blue-600/90 backdrop-blur-md border border-blue-400/30 text-white text-xs font-bold tracking-widest uppercase mb-6 animate-fade-in shadow-lg shadow-blue-900/50">
+                        {index === 0 ? 'Service Atelier Express' : 'PhoneDrive Premium'}
                     </span>
-                    <h1 className="text-5xl md:text-8xl font-bold text-white mb-6 animate-fade-in drop-shadow-2xl tracking-tighter leading-tight">
+                    <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 animate-fade-in drop-shadow-2xl tracking-tight leading-tight max-w-4xl">
                         {slide.title}
                     </h1>
-                    <p className="text-lg md:text-2xl text-slate-200 mb-10 max-w-2xl animate-fade-in delay-100 font-light">
+                    <p className="text-lg md:text-2xl text-slate-200 mb-10 max-w-2xl animate-fade-in delay-100 font-light leading-relaxed">
                         {slide.subtitle}
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 animate-fade-in delay-200">
-                        <Link to="/boutique" className="bg-white text-slate-900 px-10 py-4 rounded-full font-bold text-lg hover:bg-slate-200 transition shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 transform duration-300">
-                            {slide.cta}
+                        {/* Le lien est maintenant dynamique (boutique ou réparation) */}
+                        <Link 
+                            to={slide.link} 
+                            className="bg-white text-slate-900 px-10 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:scale-105 transform duration-300 flex items-center gap-2"
+                        >
+                            {slide.cta} {index === 0 ? <i className="fa-solid fa-screwdriver-wrench"></i> : <i className="fa-solid fa-arrow-right"></i>}
                         </Link>
                     </div>
                 </div>
             </div>
         ))}
         
-        {/* Indicateurs */}
-        <div className="absolute bottom-12 left-0 right-0 z-30 flex justify-center gap-4">
+        {/* Indicateurs (Barres) */}
+        <div className="absolute bottom-12 left-0 right-0 z-40 flex justify-center gap-4">
             {slides.map((_, index) => (
                 <button 
                     key={index}
                     onClick={() => setCurrentSlide(index)}
-                    className={`h-1 rounded-full transition-all duration-500 ${index === currentSlide ? 'bg-white w-12' : 'bg-white/30 w-4 hover:bg-white/60'}`}
+                    className={`h-1.5 rounded-full transition-all duration-500 ${index === currentSlide ? 'bg-white w-12 shadow-[0_0_10px_rgba(255,255,255,0.8)]' : 'bg-white/30 w-4 hover:bg-white/60'}`}
                 />
             ))}
         </div>
     </div>
 
-      {/* --- 1. SECTION "L'ATELIER" (Réparation) --- */}
-      <div className="bg-slate-900 text-white py-24 relative overflow-hidden">
-         {/* Cercle décoratif en fond */}
-         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-
-         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-16 relative z-10">
-            <div className="md:w-1/2">
-                {/* Image de réparation (Technicien avec outils) */}
-                <img 
-    src="https://images.unsplash.com/photo-1588508065123-287b28e013da?q=80&w=2070&auto=format&fit=crop" 
-    alt="Atelier de réparation" 
-    className="rounded-3xl shadow-2xl border border-slate-700 hover:scale-105 transition duration-500 w-full object-cover h-[400px]" 
-    onError={(e) => {e.target.src = 'https://placehold.co/600x400/1e293b/FFF?text=Atelier+PhoneDrive'}}
-/>
-            </div>
-            <div className="md:w-1/2 space-y-6">
-                <div className="inline-block bg-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Service Atelier</div>
-                <h2 className="text-4xl md:text-5xl font-bold leading-tight">Votre iPhone est cassé ?<br/>On s'en occupe.</h2>
-                <p className="text-slate-300 text-lg">
-                    Un écran brisé ou une batterie fatiguée ne devrait pas signifier la fin de votre appareil.
-                    Choisissez : passez à l'atelier ou demandez une intervention à domicile/bureau.
-                </p>
-                <ul className="space-y-3">
-                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Réparation en Atelier ou en Déplacement</li>
-                    <li className="flex items-center gap-3 text-slate-300"><i className="fa-solid fa-check-circle text-blue-500"></i> Garantie 6 mois sur les réparations</li>
-                </ul>
-                <div className="pt-4">
-                    <Link to="/reparation" className="bg-white text-slate-900 px-8 py-3 rounded-xl font-bold hover:bg-blue-50 transition inline-flex items-center gap-2">
-                        Prendre rendez-vous <i className="fa-solid fa-calendar-check"></i>
-                    </Link>
-                </div>
-            </div>
-         </div>
-      </div>
-
-      {/* --- 2. SECTION "POURQUOI NOUS ?" --- */}
+      {/* --- 2. SECTION "POURQUOI NOUS ?" (Rassurante) --- */}
       <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">L'expérience Apple, sans le stress.</h2>
-            <p className="text-slate-500 max-w-2xl mx-auto">Nous avons réinventé l'achat d'occasion. Fini les mauvaises surprises, place à la sérénité.</p>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">L'Expertise Apple à Paris.</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto">Que ce soit pour une réparation minutieuse ou un achat vérifié, nous ne laissons rien au hasard.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-blue-100">
                 <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform">
-                    <i className="fa-solid fa-magnifying-glass-chart"></i>
+                    <i className="fa-solid fa-screwdriver-wrench"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">35 Points de Contrôle</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Réparation Expert</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                    Écran, batterie, FaceID, micro... Rien n'est laissé au hasard. Nos techniciens certifiés vérifient chaque pixel avant la mise en vente.
+                    Écran cassé ? Batterie HS ? Nos techniciens certifiés réparent votre iPhone en 30 minutes avec des pièces de qualité d'origine.
                 </p>
             </div>
 
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-green-100">
                 <div className="w-14 h-14 bg-green-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-green-200 group-hover:scale-110 transition-transform">
-                    <i className="fa-solid fa-battery-full"></i>
+                    <i className="fa-solid fa-check-double"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">Batterie Top Forme</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Contrôle 35 Points</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                    La peur n°1 du reconditionné ? La batterie. Chez PhoneDrive, nous garantissons une capacité supérieure à 85% ou nous la remplaçons à neuf.
+                    Avant de vendre un iPhone, nous testons tout : FaceID, micros, caméras... Vous achetez un appareil fiable, garanti 12 mois.
                 </p>
             </div>
 
             <div className="group bg-slate-50 hover:bg-white p-8 rounded-3xl transition-all duration-300 hover:shadow-xl border border-slate-100 hover:border-purple-100">
                 <div className="w-14 h-14 bg-purple-600 rounded-2xl flex items-center justify-center text-white text-2xl mb-6 shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform">
-                    <i className="fa-solid fa-headset"></i>
+                    <i className="fa-solid fa-truck-fast"></i>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-3">SAV Français Réactif</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-3">Atelier & Domicile</h3>
                 <p className="text-slate-500 text-sm leading-relaxed">
-                    Un problème ? Notre atelier est à Paris. Pas de chatbots, de vrais humains vous répondent et réparent votre mobile en 24h.
+                    Pas le temps de passer ? Nous intervenons à votre bureau ou à domicile sur Paris et petite couronne. Simple et efficace.
                 </p>
             </div>
         </div>
