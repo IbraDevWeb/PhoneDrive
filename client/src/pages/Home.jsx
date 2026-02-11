@@ -9,7 +9,7 @@ function Home() {
     {
       image: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?q=80&w=2070&auto=format&fit=crop",
       title: "Votre iPhone est cassé ?",
-      subtitle: "Pas de panique. Écran, batterie, micro... Nous réparons tout en 30 minutes. Atelier à Paris ou à domicile.",
+      subtitle: "Pas de panique. Écran, batterie, micro... Nous réparons tout en 30 minutes. Atelier à Argenteuil ou à domicile.",
       cta: "Prendre Rendez-vous",
       link: "/reparation",
       icon: <i className="fa-solid fa-screwdriver-wrench"></i>
@@ -109,7 +109,7 @@ function Home() {
                     <div className="flex items-center gap-3 text-slate-300 bg-slate-800/50 p-3 rounded-lg border border-slate-700">
                         <i className="fa-solid fa-store text-blue-500 text-xl"></i>
                         <div>
-                            <span className="block font-bold text-white">Atelier Paris</span>
+                            <span className="block font-bold text-white">Atelier Argenteuil</span>
                             <span className="text-xs">Sur RDV en 30 min</span>
                         </div>
                     </div>
@@ -133,7 +133,7 @@ function Home() {
       {/* --- SECTION "POURQUOI NOUS ?" (Modifiée) --- */}
       <div className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-slate-50">
         <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-slate-900 mb-4">L'Expertise Apple à Paris.</h2>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">L'Expertise Apple à Argenteuil.</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">Que ce soit pour une réparation minutieuse ou un achat vérifié, nous ne laissons rien au hasard.</p>
         </div>
 
