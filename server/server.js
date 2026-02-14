@@ -19,32 +19,42 @@ const ADMIN_EMAIL = "nishimiya.ichida@gmail.com";
 // 👇 ADRESSE DE LA BOUTIQUE
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
-// Remplace "app.use(cors());" par tout ça :
+// Configuration CORS (Sécurité)
 app.use(cors({
-  origin: '*', // Autorise tout le monde (Vercel, ton ordi, etc.)
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Autorise toutes les actions
-  allowedHeaders: ['Content-Type', 'Authorization'] // Autorise l'envoi du Token (le badge)
+  origin: '*', // Autorise tout le monde
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
-// --- MIDDLEWARES ---
+// --- MIDDLEWARES (Les Vigiles) ---
+
+// Vigile Admin : Vérifie si le token contient bien "role: admin"
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
+  
   if (!token) return res.status(401).json({ error: "Token manquant." });
+  
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    // On accepte si le token dit 'admin' OU si l'email dans le token correspond à l'admin
-    // (Mais ici on se base sur le rôle encodé dans le token)
-    if (err || decoded.role !== 'admin') return res.status(403).json({ error: "Accès Admin requis." });
+    if (err) return res.status(403).json({ error: "Token invalide." });
+    
+    // Si le rôle n'est pas admin, on bloque
+    if (decoded.role !== 'admin') {
+        return res.status(403).json({ error: "Accès refusé : Vous n'êtes pas admin." });
+    }
+    
     req.user = decoded;
     next();
   });
 };
 
+// Vigile Utilisateur Standard
 const authenticateUser = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: "Connectez-vous." });
+    
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
       if (err) return res.status(403).json({ error: "Session expirée." });
       req.userId = decoded.id;
@@ -54,27 +64,23 @@ const authenticateUser = (req, res, next) => {
 
 // --- AUTHENTIFICATION ---
 
-// Login Admin Classique (Via mot de passe unique)
-app.post('/api/login', (req, res) => {
-    const { password } = req.body;
-    if (password === process.env.ADMIN_PASSWORD) {
-        const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET, { expiresIn: '2h' });
-        res.json({ token });
-    } else {
-        res.status(401).json({ error: "Mot de passe incorrect" });
-    }
-});
-
 // Inscription Client
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, name, phone, address } = req.body;
+        
+        // Vérification si existe déjà
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) return res.status(400).json({ error: "Email déjà utilisé." });
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        await prisma.user.create({ data: { email, password: hashedPassword, name, phone, address } });
+        
+        // Par défaut, tout le monde est 'client' dans la base de données
+        await prisma.user.create({ 
+            data: { email, password: hashedPassword, name, phone, address, role: 'client' } 
+        });
 
+        // Email de bienvenue
         try {
             await resend.emails.send({
                 from: 'onboarding@resend.dev',
@@ -88,32 +94,57 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
 
-// Login Client (AVEC PASSE-DROIT ADMIN)
+// 👇 LA ROUTE DE CONNEXION CORRIGÉE (Celle qui règle le bug 403) 👇
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
+        
+        // On cherche l'utilisateur
         const user = await prisma.user.findUnique({ where: { email } });
-        if (!user) return res.status(404).json({ error: "Inconnu." });
+        if (!user) return res.status(404).json({ error: "Email inconnu." });
         
+        // On vérifie le mot de passe
         const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(401).json({ error: "Mot de passe faux." });
+        if (!validPassword) return res.status(401).json({ error: "Mot de passe incorrect." });
         
-        // --- 👑 LE PASSE-DROIT ADMIN ---
-        // Si c'est TON email, on force le rôle 'admin'. Sinon 'client'.
-        let userRole = 'client';
-        if (user.email === "nishimiya.ichida@gmail.com") {
-            userRole = 'admin';
+        // --- 👑 LE FIX SUPRÊME ---
+        // On nettoie l'email (minuscule, sans espace) pour être sûr
+        const cleanEmail = email.trim().toLowerCase();
+        const adminEmail = "nishimiya.ichida@gmail.com";
+
+        // On détermine le rôle FINAL qui ira dans le badge
+        let finalRole = 'client'; // Par défaut
+        
+        // Si c'est TOI, on force le rôle Admin, peu importe ce que dit la base de données
+        if (cleanEmail === adminEmail) {
+            finalRole = 'admin';
+        } else {
+            // Sinon, on prend le rôle de la base de données (si un jour tu as d'autres rôles)
+            finalRole = user.role || 'client';
         }
-        // -------------------------------
+        // -------------------------
         
-        const token = jwt.sign({ id: user.id, role: userRole }, process.env.JWT_SECRET, { expiresIn: '7d' });
+        // Création du Token avec le BON rôle
+        const token = jwt.sign(
+            { id: user.id, role: finalRole, email: user.email }, 
+            process.env.JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+        
         const { password: _, ...userData } = user;
         
-        // On renvoie le rôle modifié au frontend
-        res.json({ token, user: { ...userData, role: userRole } });
+        // On renvoie les infos au frontend
+        res.json({ 
+            token, 
+            user: { 
+                ...userData, 
+                role: finalRole // On envoie bien le rôle forcé
+            } 
+        });
+
     } catch (error) { 
-        console.error(error);
-        res.status(500).json({ error: "Erreur connexion" }); 
+        console.error("Erreur Login:", error);
+        res.status(500).json({ error: "Erreur serveur lors de la connexion" }); 
     }
 });
 
@@ -140,14 +171,28 @@ app.get('/api/products/:id', async (req, res) => {
     res.json(product);
 });
 
+// Route Protégée : Ajout de produit (Admin Seulement)
 app.post('/api/products', authenticateAdmin, async (req, res) => {
   try {
     const { model, price, image, description, storage, color } = req.body;
-    const product = await prisma.product.create({ data: { model, price: parseFloat(price), image, description, storage, color } });
+    const product = await prisma.product.create({ 
+        data: { 
+            model, 
+            price: parseFloat(price), 
+            image, 
+            description, 
+            storage, 
+            color 
+        } 
+    });
     res.json(product);
-  } catch (error) { res.status(500).json({ error: "Erreur ajout" }); }
+  } catch (error) { 
+      console.error(error);
+      res.status(500).json({ error: "Erreur lors de l'ajout du produit" }); 
+  }
 });
 
+// Route Protégée : Suppression (Admin Seulement)
 app.delete('/api/products/:id', authenticateAdmin, async (req, res) => {
     await prisma.product.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: "Supprimé" });
@@ -222,7 +267,6 @@ app.post('/api/appointments', async (req, res) => {
             } 
         });
         
-        // C'est ici qu'on définit l'adresse qui s'affichera dans le mail
         const locationText = locationType === 'atelier' 
             ? `À l'Atelier (${SHOP_ADDRESS})` 
             : `En Déplacement à : ${locationAddress}`;
