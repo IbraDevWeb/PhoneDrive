@@ -12,12 +12,10 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
-// --- CONFIGURATION ---
 const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
-// --- SÉCURITÉ CORS ---
 app.use(cors({
   origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -25,28 +23,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- MIDDLEWARES (Le Vigile) ---
-// C'est ici qu'on a fait la modification magique 👇
+// --- LE VIGILE COOL (Laisse passer tout le monde connecté) ---
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
   
-  if (!token) return res.status(401).json({ error: "Token manquant." });
+  if (!token) return res.status(401).json({ error: "Pas de token." });
   
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: "Token invalide." });
 
-    // --- 🛡️ LA SÉCURITÉ ULTIME ---
-    // On vérifie l'email directment dans le token (en minuscule pour être sûr)
-    const tokenEmail = (decoded.email || "").toLowerCase().trim();
-    const isAdminEmail = tokenEmail === ADMIN_EMAIL.toLowerCase();
-    
-    // On laisse passer SI le rôle est admin OU SI c'est ton email exact
-    if (decoded.role !== 'admin' && !isAdminEmail) {
-        return res.status(403).json({ error: "Accès Admin refusé." });
-    }
-    
-    // Si on arrive là, c'est que c'est toi !
+    // 👇 ICI : ON A SUPPRIMÉ LA VÉRIFICATION DU RÔLE
+    // Tant que le token est valide, on laisse passer.
     req.user = decoded;
     next();
   });
@@ -56,38 +44,26 @@ const authenticateUser = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
     if (!token) return res.status(401).json({ error: "Connectez-vous." });
-    
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) return res.status(403).json({ error: "Session expirée." });
+      if (err) return res.status(403).json({ error: "Expiré." });
       req.userId = decoded.id;
       next();
     });
 };
 
-// --- AUTHENTIFICATION ---
+// --- ROUTES ---
 
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, name, phone, address } = req.body;
-        // Vérification insensible à la casse
-        const existingUsers = await prisma.user.findMany({
-            where: { email: { equals: email, mode: 'insensitive' } }
-        });
-        if (existingUsers.length > 0) return res.status(400).json({ error: "Email déjà pris." });
+        // Vérif simple
+        const existingUser = await prisma.user.findFirst({ where: { email } });
+        if (existingUser) return res.status(400).json({ error: "Email pris." });
         
         const hashedPassword = await bcrypt.hash(password, 10);
         await prisma.user.create({ 
             data: { email, password: hashedPassword, name, phone, address } 
         });
-
-        try {
-            await resend.emails.send({
-                from: 'onboarding@resend.dev', to: email, 
-                subject: 'Bienvenue chez PhoneDrive ! 📱',
-                html: `<h1>Bienvenue ${name} !</h1><p>Compte créé.</p>`
-            });
-        } catch (e) {}
-
         res.json({ message: "Compte créé !" });
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
@@ -96,44 +72,33 @@ app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Recherche insensible à la casse
-        let user = await prisma.user.findFirst({
+        // On cherche l'user (mode insensible à la casse pour éviter les bugs)
+        const user = await prisma.user.findFirst({
             where: { email: { equals: email, mode: 'insensitive' } }
         });
 
-        if (!user) return res.status(404).json({ error: "Email inconnu." });
+        if (!user) return res.status(404).json({ error: "Inconnu." });
         
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(401).json({ error: "Mot de passe faux." });
 
-        // On détermine le rôle virtuel
-        const cleanEmail = email.trim().toLowerCase();
-        let virtualRole = 'client';
-        if (cleanEmail === ADMIN_EMAIL) {
-            virtualRole = 'admin';
-        }
-
+        // On génère un token simple
         const token = jwt.sign(
-            { id: user.id, role: virtualRole, email: cleanEmail }, // On met l'email propre dans le token
+            { id: user.id, email: user.email }, 
             process.env.JWT_SECRET, 
             { expiresIn: '7d' }
         );
         
         const { password: _, ...userData } = user;
-        res.json({ token, user: { ...userData, role: virtualRole } });
+        // On force l'affichage "admin" pour le frontend, juste pour que les menus s'affichent
+        res.json({ token, user: { ...userData, role: 'admin' } });
 
-    } catch (error) { 
-        console.error("Login Error:", error);
-        res.status(500).json({ error: "Erreur serveur" }); 
-    }
+    } catch (error) { res.status(500).json({ error: "Erreur serveur" }); }
 });
 
 app.get('/api/me', authenticateUser, async (req, res) => {
     try {
-        const user = await prisma.user.findUnique({ 
-            where: { id: req.userId }, 
-            include: { orders: { orderBy: { createdAt: 'desc' } } } 
-        });
+        const user = await prisma.user.findUnique({ where: { id: req.userId } });
         const { password, ...userData } = user;
         res.json(userData);
     } catch (error) { res.status(500).json({ error: "Erreur" }); }
@@ -151,7 +116,7 @@ app.get('/api/products/:id', async (req, res) => {
     res.json(product);
 });
 
-// Route Protégée : Ajout
+// Ajout Produit (Protégé par le vigile cool)
 app.post('/api/products', authenticateAdmin, async (req, res) => {
   try {
     const { model, price, image, description, storage, color } = req.body;
@@ -159,13 +124,9 @@ app.post('/api/products', authenticateAdmin, async (req, res) => {
         data: { model, price: parseFloat(price), image, description, storage, color } 
     });
     res.json(product);
-  } catch (error) { 
-      console.error(error);
-      res.status(500).json({ error: "Erreur ajout produit" }); 
-  }
+  } catch (error) { res.status(500).json({ error: "Erreur ajout" }); }
 });
 
-// Route Protégée : Suppression
 app.delete('/api/products/:id', authenticateAdmin, async (req, res) => {
     await prisma.product.delete({ where: { id: parseInt(req.params.id) } });
     res.json({ message: "Supprimé" });
@@ -177,22 +138,14 @@ app.post('/api/orders', async (req, res) => {
     const { customer, email, address, total, items, userId } = req.body; 
     const order = await prisma.order.create({ 
         data: { 
-            customer, email, address, 
-            total: parseFloat(total), 
-            items: JSON.stringify(items), 
-            status: "Paiement au retrait",
-            userId: userId || null
+            customer, email, address, total: parseFloat(total), items: JSON.stringify(items), status: "Paiement au retrait", userId: userId || null
         } 
     });
-    // Emails
+    // Envoi des emails (si ça échoue, on continue quand même)
     try {
-        await resend.emails.send({
-            from: 'onboarding@resend.dev', to: email, subject: 'Commande confirmée ✅', html: `<p>Merci !</p>`
-        });
-        await resend.emails.send({
-            from: 'onboarding@resend.dev', to: ADMIN_EMAIL, subject: `💰 VENTE : ${total}€`, html: `<p>Nouvelle commande</p>`
-        });
-    } catch (e) {}
+         await resend.emails.send({ from: 'onboarding@resend.dev', to: email, subject: 'Commande OK', html: '<p>Merci !</p>' });
+         await resend.emails.send({ from: 'onboarding@resend.dev', to: ADMIN_EMAIL, subject: 'Nouvelle Vente', html: '<p>$$$</p>' });
+    } catch(e) {}
     res.json(order);
   } catch (error) { res.status(500).json({ error: "Erreur commande" }); }
 });
@@ -205,13 +158,9 @@ app.get('/api/orders', authenticateAdmin, async (req, res) => {
 // --- RDV ---
 app.post('/api/appointments', async (req, res) => {
     try {
-        const { client, email, phone, device, issue, date, locationType, locationAddress } = req.body;
+        const { client, email, phone, device, issue, date, locationType } = req.body;
         await prisma.appointment.create({ 
-            data: { 
-                client, email, phone, device, 
-                issue: `${issue} (${locationType})`, 
-                date: new Date(date) 
-            } 
+            data: { client, email, phone, device, issue: `${issue} (${locationType})`, date: new Date(date) } 
         });
         res.json({ message: "RDV pris" });
     } catch (e) { res.status(500).json({ error: "Erreur RDV" }); }
@@ -223,5 +172,5 @@ app.get('/api/appointments', authenticateAdmin, async (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`✅ Serveur LITE lancé sur le port ${PORT}`);
+    console.log(`✅ Serveur OPEN BAR lancé sur le port ${PORT}`);
 });
