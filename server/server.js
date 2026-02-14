@@ -18,7 +18,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
-// --- SÉCURITÉ CORS (Blindée) ---
+// --- SÉCURITÉ CORS ---
 app.use(cors({
   origin: '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -66,11 +66,11 @@ app.post('/api/auth/register', async (req, res) => {
         if (existingUser) return res.status(400).json({ error: "Email déjà pris." });
         
         const hashedPassword = await bcrypt.hash(password, 10);
+        // On ne définit PAS de rôle ici pour éviter les bugs de base de données
         await prisma.user.create({ 
-            data: { email, password: hashedPassword, name, phone, address, role: 'client' } 
+            data: { email, password: hashedPassword, name, phone, address } 
         });
 
-        // Email de bienvenue
         try {
             await resend.emails.send({
                 from: 'onboarding@resend.dev', to: email, 
@@ -83,17 +83,13 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
 
-// 👇 LA ROUTE DE LOGIN MAGIQUE (Celle qui répare tout) 👇
+// 👇 LE LOGIN "SAFE" (Sans écriture en BDD) 👇
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // 1. On cherche l'utilisateur (peut importe la majuscule/minuscule à l'origine)
-        // Note: Prisma est parfois sensible à la casse selon la base de données, 
-        // donc on cherche l'email tel quel pour commencer.
+        // Recherche de l'utilisateur ( insensible à la casse si possible)
         let user = await prisma.user.findUnique({ where: { email } });
-        
-        // Si pas trouvé, on essaye en minuscule (au cas où)
         if (!user) {
              const users = await prisma.user.findMany({
                 where: { email: { equals: email, mode: 'insensitive' } }
@@ -106,34 +102,36 @@ app.post('/api/auth/login', async (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(401).json({ error: "Mot de passe faux." });
 
-        // --- 🛡️ AUTO-CORRECTION DU RÔLE (Le Fix Radical) ---
-        // On nettoie l'email pour comparer
+        // --- 🛡️ PASSE-DROIT VIRTUEL ---
+        // On décide du rôle ICI, dans le code, sans toucher à la base de données.
         const cleanEmail = email.trim().toLowerCase();
         
+        let virtualRole = 'client'; // Par défaut
+        
+        // Si c'est TOI, tu es Admin. Point final.
         if (cleanEmail === ADMIN_EMAIL) {
-            console.log("👑 ADMIN DÉTECTÉ : " + email);
-            
-            // Si la base de données dit encore "client", on la force à changer pour toujours
-            if (user.role !== 'admin') {
-                console.log("🛠️ MISE À JOUR DU RÔLE EN BDD...");
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: { role: 'admin' }
-                });
-                user.role = 'admin'; // On met à jour l'objet local aussi
-            }
+            console.log("👑 ADMIN CONNECTÉ (Mode Virtuel) : " + email);
+            virtualRole = 'admin';
         }
-        // ---------------------------------------------------
+        // ------------------------------
 
-        // On génère le badge avec le rôle (qui est maintenant forcément 'admin' pour toi)
+        // On génère le badge avec ce rôle virtuel
         const token = jwt.sign(
-            { id: user.id, role: user.role, email: user.email }, 
+            { id: user.id, role: virtualRole, email: user.email }, 
             process.env.JWT_SECRET, 
             { expiresIn: '7d' }
         );
         
         const { password: _, ...userData } = user;
-        res.json({ token, user: userData });
+        
+        // On renvoie les infos au frontend en TRICHANT sur le rôle affiché
+        res.json({ 
+            token, 
+            user: { 
+                ...userData, 
+                role: virtualRole // Le frontend verra 'admin' même si la BDD ne le sait pas
+            } 
+        });
 
     } catch (error) { 
         console.error("Login Error:", error);
@@ -198,7 +196,6 @@ app.post('/api/orders', async (req, res) => {
         } 
     });
 
-    // Emails (Client + Admin)
     try {
         await resend.emails.send({
             from: 'onboarding@resend.dev', to: email, 
