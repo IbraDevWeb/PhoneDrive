@@ -14,7 +14,6 @@ const PORT = process.env.PORT || 5000;
 
 // --- CONFIGURATION ---
 const resend = new Resend(process.env.RESEND_API_KEY);
-// Ton email Admin (On met tout en minuscule pour être sûr)
 const ADMIN_EMAIL = "nishimiya.ichida@gmail.com"; 
 const SHOP_ADDRESS = "10 Rue de la Tech, 75000 Paris"; 
 
@@ -26,7 +25,8 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// --- MIDDLEWARES ---
+// --- MIDDLEWARES (Le Vigile) ---
+// C'est ici qu'on a fait la modification magique 👇
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -35,10 +35,18 @@ const authenticateAdmin = (req, res, next) => {
   
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) return res.status(403).json({ error: "Token invalide." });
-    // Vérification stricte du rôle
-    if (decoded.role !== 'admin') {
+
+    // --- 🛡️ LA SÉCURITÉ ULTIME ---
+    // On vérifie l'email directment dans le token (en minuscule pour être sûr)
+    const tokenEmail = (decoded.email || "").toLowerCase().trim();
+    const isAdminEmail = tokenEmail === ADMIN_EMAIL.toLowerCase();
+    
+    // On laisse passer SI le rôle est admin OU SI c'est ton email exact
+    if (decoded.role !== 'admin' && !isAdminEmail) {
         return res.status(403).json({ error: "Accès Admin refusé." });
     }
+    
+    // Si on arrive là, c'est que c'est toi !
     req.user = decoded;
     next();
   });
@@ -58,15 +66,16 @@ const authenticateUser = (req, res, next) => {
 
 // --- AUTHENTIFICATION ---
 
-// Inscription
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { email, password, name, phone, address } = req.body;
-        const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) return res.status(400).json({ error: "Email déjà pris." });
+        // Vérification insensible à la casse
+        const existingUsers = await prisma.user.findMany({
+            where: { email: { equals: email, mode: 'insensitive' } }
+        });
+        if (existingUsers.length > 0) return res.status(400).json({ error: "Email déjà pris." });
         
         const hashedPassword = await bcrypt.hash(password, 10);
-        // On ne définit PAS de rôle ici pour éviter les bugs de base de données
         await prisma.user.create({ 
             data: { email, password: hashedPassword, name, phone, address } 
         });
@@ -83,55 +92,35 @@ app.post('/api/auth/register', async (req, res) => {
     } catch (error) { res.status(500).json({ error: "Erreur inscription." }); }
 });
 
-// 👇 LE LOGIN "SAFE" (Sans écriture en BDD) 👇
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        // Recherche de l'utilisateur ( insensible à la casse si possible)
-        let user = await prisma.user.findUnique({ where: { email } });
-        if (!user) {
-             const users = await prisma.user.findMany({
-                where: { email: { equals: email, mode: 'insensitive' } }
-             });
-             user = users[0];
-        }
+        // Recherche insensible à la casse
+        let user = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: 'insensitive' } }
+        });
 
         if (!user) return res.status(404).json({ error: "Email inconnu." });
         
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(401).json({ error: "Mot de passe faux." });
 
-        // --- 🛡️ PASSE-DROIT VIRTUEL ---
-        // On décide du rôle ICI, dans le code, sans toucher à la base de données.
+        // On détermine le rôle virtuel
         const cleanEmail = email.trim().toLowerCase();
-        
-        let virtualRole = 'client'; // Par défaut
-        
-        // Si c'est TOI, tu es Admin. Point final.
+        let virtualRole = 'client';
         if (cleanEmail === ADMIN_EMAIL) {
-            console.log("👑 ADMIN CONNECTÉ (Mode Virtuel) : " + email);
             virtualRole = 'admin';
         }
-        // ------------------------------
 
-        // On génère le badge avec ce rôle virtuel
         const token = jwt.sign(
-            { id: user.id, role: virtualRole, email: user.email }, 
+            { id: user.id, role: virtualRole, email: cleanEmail }, // On met l'email propre dans le token
             process.env.JWT_SECRET, 
             { expiresIn: '7d' }
         );
         
         const { password: _, ...userData } = user;
-        
-        // On renvoie les infos au frontend en TRICHANT sur le rôle affiché
-        res.json({ 
-            token, 
-            user: { 
-                ...userData, 
-                role: virtualRole // Le frontend verra 'admin' même si la BDD ne le sait pas
-            } 
-        });
+        res.json({ token, user: { ...userData, role: virtualRole } });
 
     } catch (error) { 
         console.error("Login Error:", error);
@@ -195,20 +184,15 @@ app.post('/api/orders', async (req, res) => {
             userId: userId || null
         } 
     });
-
+    // Emails
     try {
         await resend.emails.send({
-            from: 'onboarding@resend.dev', to: email, 
-            subject: 'Commande confirmée ✅',
-            html: `<h1>Merci ${customer} !</h1><p>Commande de ${total}€ enregistrée.</p>`
+            from: 'onboarding@resend.dev', to: email, subject: 'Commande confirmée ✅', html: `<p>Merci !</p>`
         });
         await resend.emails.send({
-            from: 'onboarding@resend.dev', to: ADMIN_EMAIL, 
-            subject: `💰 VENTE : ${total}€`,
-            html: `<p>Nouvelle commande de ${customer}</p>`
+            from: 'onboarding@resend.dev', to: ADMIN_EMAIL, subject: `💰 VENTE : ${total}€`, html: `<p>Nouvelle commande</p>`
         });
     } catch (e) {}
-
     res.json(order);
   } catch (error) { res.status(500).json({ error: "Erreur commande" }); }
 });
