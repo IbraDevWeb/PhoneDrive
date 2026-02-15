@@ -1,6 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-// On enlève useToast ici pour éviter les erreurs si le fichier n'existe pas encore parfaitement
-// Si tu as ToastContext, tu peux le remettre, mais on va faire simple et robuste.
 
 const AuthContext = createContext();
 
@@ -12,7 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // URL du Backend
+  // URL PROPRE DU BACKEND
   const API_URL = 'https://phonedrive-api.onrender.com/api';
 
   useEffect(() => {
@@ -20,59 +18,63 @@ export function AuthProvider({ children }) {
   }, []);
 
   const checkUserLoggedIn = async () => {
-    const token = localStorage.getItem('token'); // On utilise 'token' tout court
-    if (token) {
-      try {
-        const res = await fetch(`${API_URL}/me`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        setLoading(false);
+        return;
+    }
 
-        if (res.ok) {
-            const userData = await res.json();
-            // Force Admin si c'est toi
-            if (userData.email === "nishimiya.ichida@gmail.com") {
-                userData.role = 'admin';
-            }
-            setUser(userData);
-        } else {
-            localStorage.removeItem('token');
-            setUser(null);
+    try {
+      const res = await fetch(`${API_URL}/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        const userData = await res.json();
+        // Si c'est toi, on force le rôle admin pour l'affichage
+        if (userData.email === "nishimiya.ichida@gmail.com") {
+             userData.role = 'admin';
         }
-      } catch (error) {
+        setUser(userData);
+      } else {
+        // Token invalide
         localStorage.removeItem('token');
         setUser(null);
       }
+    } catch (error) {
+      localStorage.removeItem('token');
+      setUser(null);
     }
     setLoading(false);
   };
 
   const login = async (email, password) => {
     try {
-        const res = await fetch(`${API_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await res.json();
-        
-        if (res.ok) {
-            localStorage.setItem('token', data.token);
-            
-            // Force Admin immédiat
-            if (data.user.email === "nishimiya.ichida@gmail.com") {
-                data.user.role = 'admin';
-            }
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-            setUser(data.user);
-            return true;
-        } else {
-            alert(data.error || "Erreur de connexion");
-            return false;
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('token', data.token);
+        // Force le rôle admin localement pour l'accès immédiat
+        if (data.user.email === "nishimiya.ichida@gmail.com") {
+            data.user.role = 'admin';
         }
-    } catch (error) {
-        console.error(error);
-        alert("Erreur serveur");
+        setUser(data.user);
+        return true;
+      } else {
+        alert(data.error || "Identifiants incorrects");
         return false;
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Erreur de connexion au serveur");
+      return false;
     }
   };
 
