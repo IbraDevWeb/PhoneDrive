@@ -10,7 +10,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // URL PROPRE DU BACKEND
+  // URL de ton backend
   const API_URL = 'https://phonedrive-api.onrender.com/api';
 
   useEffect(() => {
@@ -19,26 +19,22 @@ export function AuthProvider({ children }) {
 
   const checkUserLoggedIn = async () => {
     const token = localStorage.getItem('token');
-    
     if (!token) {
         setLoading(false);
         return;
     }
-
     try {
       const res = await fetch(`${API_URL}/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-
       if (res.ok) {
         const userData = await res.json();
-        // Si c'est toi, on force le rôle admin pour l'affichage
+        // Petit hack pour que tu sois toujours admin chez toi
         if (userData.email === "nishimiya.ichida@gmail.com") {
              userData.role = 'admin';
         }
         setUser(userData);
       } else {
-        // Token invalide
         localStorage.removeItem('token');
         setUser(null);
       }
@@ -56,12 +52,10 @@ export function AuthProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
       const data = await res.json();
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
-        // Force le rôle admin localement pour l'accès immédiat
         if (data.user.email === "nishimiya.ichida@gmail.com") {
             data.user.role = 'admin';
         }
@@ -73,8 +67,27 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error(error);
-      alert("Erreur de connexion au serveur");
       return false;
+    }
+  };
+
+  // 👇 LA FONCTION QUI MANQUAIT (Le Moteur d'inscription) 👇
+  const register = async (userData) => {
+    try {
+        const res = await fetch(`${API_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            return { success: true };
+        } else {
+            return { success: false, error: data.error };
+        }
+    } catch (error) {
+        return { success: false, error: "Erreur de connexion au serveur" };
     }
   };
 
@@ -85,7 +98,8 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    // On n'oublie pas d'exposer 'register' ici
+    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
       {children}
     </AuthContext.Provider>
   );
