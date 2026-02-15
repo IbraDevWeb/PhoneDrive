@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useToast } from './ToastContext';
+// On enlève useToast ici pour éviter les erreurs si le fichier n'existe pas encore parfaitement
+// Si tu as ToastContext, tu peux le remettre, mais on va faire simple et robuste.
 
 const AuthContext = createContext();
 
@@ -10,9 +11,8 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { showToast } = useToast();
 
-  // URL du Backend (stockée ici pour éviter les erreurs)
+  // URL du Backend
   const API_URL = 'https://phonedrive-api.onrender.com/api';
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const checkUserLoggedIn = async () => {
-    const token = localStorage.getItem('clientToken');
+    const token = localStorage.getItem('token'); // On utilise 'token' tout court
     if (token) {
       try {
         const res = await fetch(`${API_URL}/me`, {
@@ -29,27 +29,20 @@ export function AuthProvider({ children }) {
 
         if (res.ok) {
             const userData = await res.json();
-            
-            // --- 🛡️ SÉCURITÉ ANTI-CACHE ---
-            // On force le rôle admin sur le Frontend si c'est toi
+            // Force Admin si c'est toi
             if (userData.email === "nishimiya.ichida@gmail.com") {
                 userData.role = 'admin';
             }
-            // -----------------------------
-
             setUser(userData);
         } else {
-            // Si le token est invalide (ex: expiré), on nettoie
-            localStorage.removeItem('clientToken');
+            localStorage.removeItem('token');
             setUser(null);
         }
       } catch (error) {
-        console.error("Erreur auth:", error);
-        localStorage.removeItem('clientToken');
+        localStorage.removeItem('token');
         setUser(null);
       }
     }
-    // Quoi qu'il arrive, on dit que le chargement est FINI
     setLoading(false);
   };
 
@@ -63,58 +56,34 @@ export function AuthProvider({ children }) {
         const data = await res.json();
         
         if (res.ok) {
-            localStorage.setItem('clientToken', data.token);
+            localStorage.setItem('token', data.token);
             
-            // Force Admin immédiat à la connexion
+            // Force Admin immédiat
             if (data.user.email === "nishimiya.ichida@gmail.com") {
                 data.user.role = 'admin';
             }
 
             setUser(data.user);
-            showToast(`Ravi de vous revoir, ${data.user.name || 'Admin'} ! 👋`);
             return true;
         } else {
-            showToast(data.error || "Erreur de connexion", "error");
+            alert(data.error || "Erreur de connexion");
             return false;
         }
     } catch (error) {
-        showToast("Erreur serveur", "error");
-        return false;
-    }
-  };
-
-  const register = async (userData) => {
-    try {
-        const res = await fetch(`${API_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            showToast("Compte créé ! Connectez-vous maintenant. 🎉");
-            return true;
-        } else {
-            showToast(data.error || "Erreur inscription", "error");
-            return false;
-        }
-    } catch (error) {
-        showToast("Erreur serveur", "error");
+        console.error(error);
+        alert("Erreur serveur");
         return false;
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('clientToken');
+    localStorage.removeItem('token');
     setUser(null);
-    showToast("À bientôt ! 👋");
-    // Redirection forcée vers l'accueil
-    window.location.href = '/';
+    window.location.href = '/login';
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
